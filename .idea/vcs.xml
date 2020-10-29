@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vqa/external/VQA" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vqa/external/pretrained-models.pytorch" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vqa/external/skip-thoughts.torch" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/vqa/external/skip-thoughts.torch/theano/skip-thoughts" vcs="Git" />
+  </component>
+</project>
