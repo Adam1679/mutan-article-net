@@ -11,6 +11,7 @@ from .utils import AbstractVQADataset
 from .vqa_interim import vqa_interim
 from .vqa2_interim import vqa_interim as vqa2_interim
 from .vqa_processed import vqa_processed
+from .okvqa_interim import vqa_interim as okvqa_interim
 from . import coco
 from . import vgenome
 
@@ -246,6 +247,43 @@ class VQAVisualGenome(data.Dataset):
         return self.dataset_vqa.split_name(testdev=testdev)
 
 
+class OKVQA(AbstractVQA):
+    def _interim(self):
+        okvqa_interim(self.opt['dir'])
+
+    def _processed(self):
+        vqa_processed(self.opt)
+
+    def __getitem__(self, index) :
+        item = {}
+        # TODO: better handle cascade of dict items
+        item_vqa = self.dataset[index]
+
+        # Process Visual (image or features)
+        if self.dataset_img is not None :
+            item_img = self.dataset_img.get_by_name (item_vqa['image_name'])
+            item['visual'] = item_img['visual']
+
+        # Process Question (word token)
+        item['question_id'] = item_vqa['question_id']
+        item['question'] = torch.LongTensor (item_vqa['question_wids'])
+
+        if self.data_split == 'test' :
+            if item['question_id'] in self.is_qid_testdev :
+                item['is_testdev'] = True
+            else :
+                item['is_testdev'] = False
+        else :
+            ## Process Answer if exists
+            if self.opt['samplingans'] :
+                proba = item_vqa['answers_count']
+                proba = proba / np.sum (proba)
+                item['answer'] = int (np.random.choice (item_vqa['answers_aid'], p=proba))
+            else :
+                item['answer'] = item_vqa['answer_aid']
+
+        return item
+
 def factory(data_split, opt, opt_coco=None, opt_vgenome=None):
     dataset_img = None
 
@@ -256,6 +294,8 @@ def factory(data_split, opt, opt_coco=None, opt_vgenome=None):
         dataset_vqa = VQA(data_split, opt, dataset_img)
     elif opt['dataset'] == 'VQA2' and '2' in opt['dir']: # sanity check
         dataset_vqa = VQA2(data_split, opt, dataset_img)
+    elif opt['dataset'] == "OKVQA":
+        dataset_vqa = OKVQA(data_split, opt, dataset_img)
     else:
         raise ValueError
 

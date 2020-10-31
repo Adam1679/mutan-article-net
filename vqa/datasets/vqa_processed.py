@@ -36,7 +36,7 @@ def remove_examples(examples, ans_to_aid):
     for i, ex in enumerate(examples):
         if ex['answer'] in ans_to_aid:
             new_examples.append(ex)
-    print('Number of examples reduced from %d to %d '%(len(examples), len(new_examples)))
+    print('Number of examples reduced from %d to %d because they have weired answers'%(len(examples), len(new_examples)))
     return new_examples
 
 def tokenize(sentence):
@@ -89,7 +89,7 @@ def remove_long_tail_train(examples, minwcount=0):
     bad_words = [w for w,n in counts.items() if n <= minwcount]
     vocab     = [w for w,n in counts.items() if n > minwcount]
     bad_count = sum(counts[w] for w in bad_words)
-    print('Number of bad words: %d/%d = %.2f%%' % (len(bad_words), len(counts), len(bad_words)*100.0/len(counts)))
+    print('Number of rare words: %d/%d = %.2f%%' % (len(bad_words), len(counts), len(bad_words)*100.0/len(counts)))
     print('Number of words in vocab would be %d' % (len(vocab), ))
     print('Number of UNKs: %d/%d = %.2f%%' % (bad_count, total_words, bad_count*100.0/total_words))
 
@@ -155,7 +155,7 @@ def vqa_processed(params):
         path_val = os.path.join(params['dir'], 'interim', 'val_questions_annotations.json')
     path_test    = os.path.join(params['dir'], 'interim', 'test_questions.json')
     path_testdev = os.path.join(params['dir'], 'interim', 'testdev_questions.json')
- 
+
     # An example is a tuple (question, image, answer)
     # /!\ test and test-dev have no answer
     trainset = json.load(open(path_train, 'r'))
@@ -262,8 +262,8 @@ def vqa_processed(params):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dirname',
-        default='data/vqa',
+    parser.add_argument('--dir',
+        default='./data/okvqa',
         type=str,
         help='Root directory containing raw, interim and processed directories'
     )

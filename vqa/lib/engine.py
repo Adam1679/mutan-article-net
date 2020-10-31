@@ -10,25 +10,26 @@ def train(loader, model, criterion, optimizer, logger, epoch, print_freq=10):
 
     end = time.time()
     for i, sample in enumerate(loader):
-        batch_size = sample['visual'].size(0)
 
+        batch_size = sample['visual'].size(0)  # keys = ['visual', 'question_id', 'question', 'answer']
+        # question: (B, T), (128, 26)
         # measure data loading time
         meters['data_time'].update(time.time() - end, n=batch_size)
 
         input_visual   = Variable(sample['visual'])
         input_question = Variable(sample['question'])
-        target_answer  = Variable(sample['answer'].cuda(async=True))
+        target_answer  = Variable(sample['answer'].cuda(non_blocking=True))
 
         # compute output
         output = model(input_visual, input_question)
         torch.cuda.synchronize()
         loss = criterion(output, target_answer)
-        meters['loss'].update(loss.data[0], n=batch_size)
+        meters['loss'].update(loss.item(), n=batch_size)
 
-        # measure accuracy 
+        # measure accuracy
         acc1, acc5 = utils.accuracy(output.data, target_answer.data, topk=(1, 5))
-        meters['acc1'].update(acc1[0], n=batch_size)
-        meters['acc5'].update(acc5[0], n=batch_size)
+        meters['acc1'].update(acc1.item(), n=batch_size)
+        meters['acc5'].update(acc5.item(), n=batch_size)
 
         # compute gradient and do SGD step
         optimizer.zero_grad()
@@ -71,31 +72,30 @@ def validate(loader, model, criterion, logger, epoch=0, print_freq=10):
     end = time.time()
     for i, sample in enumerate(loader):
         batch_size = sample['visual'].size(0)
-        input_visual   = Variable(sample['visual'].cuda(async=True), volatile=True)
-        input_question = Variable(sample['question'].cuda(async=True), volatile=True)
-        target_answer  = Variable(sample['answer'].cuda(async=True), volatile=True)
+        input_visual   = Variable(sample['visual'].cuda(non_blocking=True), volatile=True)
+        input_question = Variable(sample['question'].cuda(non_blocking=True), volatile=True)
+        target_answer  = Variable(sample['answer'].cuda(non_blocking=True), volatile=True)
 
         # compute output
         output = model(input_visual, input_question)
         loss = criterion(output, target_answer)
-        meters['loss'].update(loss.data[0], n=batch_size)
+        meters['loss'].update(loss.item(), n=batch_size)
 
         # measure accuracy and record loss
         acc1, acc5 = utils.accuracy(output.data, target_answer.data, topk=(1, 5))
-        meters['acc1'].update(acc1[0], n=batch_size)
-        meters['acc5'].update(acc5[0], n=batch_size)
+        meters['acc1'].update(acc1.item(), n=batch_size)
+        meters['acc5'].update(acc5.item(), n=batch_size)
 
         # compute predictions for OpenEnded accuracy
         _, pred = output.data.cpu().max(1)
         pred.squeeze_()
         for j in range(batch_size):
-            results.append({'question_id': sample['question_id'][j],
+            results.append({'question_id': sample['question_id'][j].item(),
                             'answer': loader.dataset.aid_to_ans[pred[j]]})
 
         # measure elapsed time
         meters['batch_time'].update(time.time() - end, n=batch_size)
         end = time.time()
-
         if i % print_freq == 0:
             print('Val: [{0}/{1}]\t'
                   'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
@@ -110,6 +110,7 @@ def validate(loader, model, criterion, logger, epoch=0, print_freq=10):
           .format(acc1=meters['acc1'], acc5=meters['acc1']))
 
     logger.log_meters('val', n=epoch)
+
     return meters['acc1'].avg, results
 
 
@@ -123,8 +124,8 @@ def test(loader, model, logger, epoch=0, print_freq=10):
     end = time.time()
     for i, sample in enumerate(loader):
         batch_size = sample['visual'].size(0)
-        input_visual   = Variable(sample['visual'].cuda(async=True), volatile=True)
-        input_question = Variable(sample['question'].cuda(async=True), volatile=True)
+        input_visual   = Variable(sample['visual'].cuda(non_blocking=True), volatile=True)
+        input_question = Variable(sample['question'].cuda(non_blocking=True), volatile=True)
 
         # compute output
         output = model(input_visual, input_question)
@@ -133,7 +134,7 @@ def test(loader, model, logger, epoch=0, print_freq=10):
         _, pred = output.data.cpu().max(1)
         pred.squeeze_()
         for j in range(batch_size):
-            item = {'question_id': sample['question_id'][j],
+            item = {'question_id': sample['question_id'][j].item(),
                     'answer': loader.dataset.aid_to_ans[pred[j]]}
             results.append(item)
             if sample['is_testdev'][j]:

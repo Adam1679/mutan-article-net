@@ -212,7 +212,7 @@ def main():
         #adjust_learning_rate(optimizer, epoch)
 
         # train for one epoch
-        engine.train(train_loader, model, criterion, optimizer, 
+        engine.train(train_loader, model, criterion, optimizer,
                      exp_logger, epoch, args.print_freq)
         
         if options['vqa']['trainsplit'] == 'train':
@@ -236,6 +236,7 @@ def main():
                 is_best)
 
             # save results and compute OpenEnd accuracy
+
             save_results(val_results, epoch, valset.split_name(),
                          options['logs']['dir_logs'], options['vqa']['dir'])
         else:

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="f30d250f-2790-4a95-b9e2-a4f55bd71512" name="ec2-3-238-130-241.compute-1.amazonaws.com" url="http://ec2-3-238-130-241.compute-1.amazonaws.com">
+        <fileTransfer host="ec2-3-238-130-241.compute-1.amazonaws.com" port="22" privateKey="$USER_HOME$/adam-new-key.pem" rootFolder="/home/ubuntu" accessType="SFTP" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
