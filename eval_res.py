@@ -14,9 +14,9 @@ from vqaEval import VQAEval
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dir_vqa',   type=str, default='/local/cadene/data/vqa')
+    parser.add_argument('--dir_vqa',   type=str, default='./data/okvqa')
     parser.add_argument('--dir_epoch', type=str, default='logs/16_12_13_20:39:55/epoch,1')
-    parser.add_argument('--subtype',  type=str, default='train2014')
+    parser.add_argument('--subtype',  type=str, default='val2014')
     args = parser.parse_args()
 
     diranno  = join(args.dir_vqa, 'raw', 'annotations')

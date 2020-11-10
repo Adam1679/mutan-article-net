@@ -188,7 +188,7 @@ def main():
 
         if options['vqa']['trainsplit'] == 'train':
             acc1, val_results = engine.validate(val_loader, model, criterion,
-                                                exp_logger, args.start_epoch, args.print_freq)
+                                                exp_logger, args.start_epoch, 100)
             # save results and compute OpenEnd accuracy
             exp_logger.to_json(path_logger_json)
             save_results(val_results, args.start_epoch, valset.split_name(),

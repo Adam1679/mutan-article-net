@@ -3,7 +3,7 @@ data/porting
 data/skip-thoughts
 data/vqa
 data/vqa2
-
+.idea
 logs/porting
 logs/vqa_old
 logs/vqa

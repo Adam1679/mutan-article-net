@@ -32,6 +32,10 @@ python vqa/datasets/vqa_processed.py --dir=data/okvqa
 ```
 
 
+### faeture tuning method:
+
+
+
 
 
  ### the following comments are for recording the processed data format.
