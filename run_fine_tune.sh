@@ -1,0 +1,1 @@
+python train_rag.py --path_opt options/okvqa_rag/mutan_att_train.yaml

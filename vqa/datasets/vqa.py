@@ -12,6 +12,8 @@ from .vqa_interim import vqa_interim
 from .vqa2_interim import vqa_interim as vqa2_interim
 from .vqa_processed import vqa_processed
 from .okvqa_interim import vqa_interim as okvqa_interim
+from .okvqa_an_interim import vqa_interim as okvqa_an_interim
+
 from . import coco
 from . import vgenome
 
@@ -49,11 +51,11 @@ class AbstractVQA(AbstractVQADataset):
         item = {}
         # TODO: better handle cascade of dict items
         item_vqa = self.dataset[index]
-
         # Process Visual (image or features)
         if self.dataset_img is not None:
             item_img = self.dataset_img.get_by_name(item_vqa['image_name'])
             item['visual'] = item_img['visual']
+            item['img_name'] = item_vqa['image_name']
         
         # Process Question (word token)
         item['question_id'] = item_vqa['question_id']
@@ -248,6 +250,7 @@ class VQAVisualGenome(data.Dataset):
 
 
 class OKVQA(AbstractVQA):
+
     def _interim(self):
         okvqa_interim(self.opt['dir'])
 
@@ -263,10 +266,13 @@ class OKVQA(AbstractVQA):
         if self.dataset_img is not None :
             item_img = self.dataset_img.get_by_name (item_vqa['image_name'])
             item['visual'] = item_img['visual']
+            item['img_name'] = item_vqa['image_name']
 
         # Process Question (word token)
         item['question_id'] = item_vqa['question_id']
         item['question'] = torch.LongTensor (item_vqa['question_wids'])
+        item['question_raw'] = item_vqa['question']
+        item['answers_occurence'] = [f"{ans}__{cnt}" for ans, cnt in item_vqa['answers_occurence']]
 
         if self.data_split == 'test' :
             if item['question_id'] in self.is_qid_testdev :
@@ -275,6 +281,69 @@ class OKVQA(AbstractVQA):
                 item['is_testdev'] = False
         else :
             ## Process Answer if exists
+            if self.opt['samplingans'] :
+                proba = item_vqa['answers_count']
+                proba = proba / np.sum (proba)
+                item['answer'] = int (np.random.choice (item_vqa['answers_aid'], p=proba))
+            else :
+                item['answer'] = item_vqa['answer_aid']
+
+        return item
+
+class OKVQA_RAG(OKVQA):
+    def __init__(self, *args, **kwargs):
+        import json
+        super(OKVQA_RAG, self).__init__(*args, **kwargs)
+        self.other_path = os.path.join(self.opt['dir'], "extracted_text", "query_train.json" if self.data_split == "train" else "query_val.json")
+        print(self.other_path)
+        text_by_id = {}
+        with open(self.other_path) as f:
+            all_text = json.load(f)
+            for doc in all_text:
+                q_id = doc['question_id']
+                q_query = doc['query'].lower()
+                if q_id not in text_by_id:  # TODO: 第0个是entities
+                    text_by_id[q_id] = q_query
+
+        self.text_by_id = text_by_id
+
+    def _interim(self):
+        okvqa_an_interim(self.opt['dir'])
+
+    def get_doc_by_id(self, idx):
+        return self.text_by_id[idx] if idx in self.text_by_id else ""
+
+    def __getitem__(self, index) :
+        item = {}
+        # TODO: better handle cascade of dict items
+        item_vqa = self.dataset[index]
+
+        # Process Visual (image or features)
+        if self.dataset_img is not None :
+            item_img = self.dataset_img.get_by_name (item_vqa['image_name'])
+            item['visual'] = item_img['visual']
+            item['img_name'] = item_vqa['image_name']
+
+        # Process Question (word token)
+        item['question_id'] = item_vqa['question_id']
+        item['question'] = torch.LongTensor (item_vqa['question_wids'])
+        item['question_raw'] = item_vqa['question']
+        more_questions = self.get_doc_by_id(item_vqa['question_id'])
+        item['question_query'] = more_questions
+        item['answers_occurence'] = [f"{ans}__{cnt}" for ans, cnt in item_vqa['answers_occurence']]
+        anss, cnts = zip(*item_vqa['answers_occurence'])
+        # idx = torch.multinomial (torch.tensor (cnts).float (), 1)
+        idx = torch.tensor (cnts).argmax()
+        ans = anss[idx.item ()]
+        cnt = cnts[idx.item ()]
+        item['sampled_answer'] = ans
+        if self.data_split == 'test' :
+            if item['question_id'] in self.is_qid_testdev :
+                item['is_testdev'] = True
+            else :
+                item['is_testdev'] = False
+        else :
+            # Process Answer if exists
             if self.opt['samplingans'] :
                 proba = item_vqa['answers_count']
                 proba = proba / np.sum (proba)
@@ -296,6 +365,8 @@ def factory(data_split, opt, opt_coco=None, opt_vgenome=None):
         dataset_vqa = VQA2(data_split, opt, dataset_img)
     elif opt['dataset'] == "OKVQA":
         dataset_vqa = OKVQA(data_split, opt, dataset_img)
+    elif opt['dataset'] == "OKVQA_RAG":
+        dataset_vqa = OKVQA_RAG(data_split, opt, dataset_img)
     else:
         raise ValueError
 

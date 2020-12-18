@@ -61,7 +61,7 @@ def train(loader, model, criterion, optimizer, logger, epoch, print_freq=10):
 #     for param_group in optimizer.param_groups:
 #         param_group['lr'] = lr
 
-
+import re
 def validate(loader, model, criterion, logger, epoch=0, print_freq=10):
     results = []
 
@@ -90,21 +90,26 @@ def validate(loader, model, criterion, logger, epoch=0, print_freq=10):
         _, pred = output.data.cpu().max(1)
         pred.squeeze_()
         for j in range(batch_size):
-            results.append({'question_id': sample['question_id'][j].item(),
-                            'answer': loader.dataset.aid_to_ans[pred[j]]})
+            d = {'question_id': sample['question_id'][j].item(),
+                            'answer': loader.dataset.aid_to_ans[pred[j]],
+                            "true_answer": loader.dataset.aid_to_ans[target_answer[j]],
+                            'img_name': sample['img_name'][j]}
+            d['question_raw'] = sample['question_raw'][j]
+            d['answers_occurence'] = sample['answers_occurence'][0][j]
+            results.append(d)
 
         # measure elapsed time
         meters['batch_time'].update(time.time() - end, n=batch_size)
         end = time.time()
-        if i % print_freq == 0:
-            print('Val: [{0}/{1}]\t'
-                  'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
-                  'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
-                  'Acc@1 {acc1.val:.3f} ({acc1.avg:.3f})\t'
-                  'Acc@5 {acc5.val:.3f} ({acc5.avg:.3f})'.format(
-                   i, len(loader), batch_time=meters['batch_time'],
-                   data_time=meters['data_time'], loss=meters['loss'],
-                   acc1=meters['acc1'], acc5=meters['acc5']))
+        # if i % print_freq == 0:
+        #     print('Val: [{0}/{1}]\t'
+        #           'Time {batch_time.val:.3f} ({batch_time.avg:.3f})\t'
+        #           'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
+        #           'Acc@1 {acc1.val:.3f} ({acc1.avg:.3f})\t'
+        #           'Acc@5 {acc5.val:.3f} ({acc5.avg:.3f})'.format(
+        #            i, len(loader), batch_time=meters['batch_time'],
+        #            data_time=meters['data_time'], loss=meters['loss'],
+        #            acc1=meters['acc1'], acc5=meters['acc5']))
 
     print(' * Acc@1 {acc1.avg:.3f} Acc@5 {acc5.avg:.3f}'
           .format(acc1=meters['acc1'], acc5=meters['acc1']))

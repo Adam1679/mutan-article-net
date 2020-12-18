@@ -193,15 +193,16 @@ def main():
             exp_logger.to_json(path_logger_json)
             save_results(val_results, args.start_epoch, valset.split_name(),
                          options['logs']['dir_logs'], options['vqa']['dir'])
-        
-        test_results, testdev_results = engine.test(test_loader, model, exp_logger,
-                                                    args.start_epoch, args.print_freq)
-        # save results and DOES NOT compute OpenEnd accuracy
-        exp_logger.to_json(path_logger_json)
-        save_results(test_results, args.start_epoch, testset.split_name(),
-                     options['logs']['dir_logs'], options['vqa']['dir'])
-        save_results(testdev_results, args.start_epoch, testset.split_name(testdev=True),
-                     options['logs']['dir_logs'], options['vqa']['dir'])
+
+        # this cannot be used
+        # test_results, testdev_results = engine.test(test_loader, model, exp_logger,
+        #                                             args.start_epoch, args.print_freq)
+        # # save results and DOES NOT compute OpenEnd accuracy
+        # exp_logger.to_json(path_logger_json)
+        # save_results(test_results, args.start_epoch, testset.split_name(),
+        #              options['logs']['dir_logs'], options['vqa']['dir'])
+        # save_results(testdev_results, args.start_epoch, testset.split_name(testdev=True),
+        #              options['logs']['dir_logs'], options['vqa']['dir'])
         return
 
     #########################################################################################
@@ -283,7 +284,7 @@ def save_results(results, epoch, split_name, dir_logs, dir_vqa):
     path_rslt = os.path.join(dir_epoch, name_json)
     os.system('mkdir -p ' + dir_epoch)
     with open(path_rslt, 'w') as handle:
-        json.dump(results, handle)
+        handle.write(json.dumps(results))
     if not 'test' in split_name:
         os.system('python2 eval_res.py --dir_vqa {} --dir_epoch {} --subtype {} &'
                   .format(dir_vqa, dir_epoch, split_name))

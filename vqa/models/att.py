@@ -7,7 +7,7 @@ import copy
 from vqa.lib import utils
 from vqa.models import seq2vec
 from vqa.models import fusion
-
+from transformers import RagTokenizer, RagRetriever, RagSequenceForGeneration, RagTokenForGeneration, BartForConditionalGeneration, RagConfig, DPRQuestionEncoder
 class AbstractAtt(nn.Module):
 
     def __init__(self, opt={}, vocab_words=[], vocab_answers=[]):
@@ -162,7 +162,6 @@ class AbstractAtt(nn.Module):
         x = self._classif(x)
         return x
 
-
 class MLBAtt(AbstractAtt):
 
     def __init__(self, opt={}, vocab_words=[], vocab_answers=[]):
@@ -190,7 +189,6 @@ class MLBAtt(AbstractAtt):
     def _fusion_classif(self, x_v, x_q):
         x_mm = torch.mul(x_v, x_q)
         return x_mm
-
 
 class MutanAtt(AbstractAtt):
 
@@ -221,3 +219,31 @@ class MutanAtt(AbstractAtt):
 
     def _fusion_classif(self, x_v, x_q):
         return self.fusion_classif(x_v, x_q)
+
+class MutanATtMFN(MutanAtt):
+    pass
+
+# class MutanAttRAG(MutanAtt):
+#     def __init__(self, **kwargs):
+#         super(MutanAttRAG, self).__init__(**kwargs)
+#         self.question_encoder = DPRQuestionEncoder.from_pretrained('facebook/dpr-question_encoder-single-nq-base')
+#         self.generator = BartForConditionalGeneration.from_pretrained('facebook/bart-large')
+#         self.retriever = RagRetriever.from_pretrained("facebook/rag-token-nq", index_name="exact", use_dummy_dataset=True)
+#         config = RagConfig.from_question_encoder_generator_configs (self.question_encoder.config, self.generator.config)
+#         self.rag = RagTokenForGeneration(config, question_encoder=self.question_encoder,generator=self.generator, retriever=self.retriever)
+#
+#
+#     def foward(self, input_v, input_q, input_docs):
+#         """(B, C, W, H), (B, T), (B, T2)"""
+#         if input_v.dim() != 4 and input_q.dim() != 2:
+#             raise ValueError
+#         input_q
+#         x_q_vec = self.seq2vec (input_q)
+#         list_v_att = self._attention (input_v, x_q_vec)
+#         x = self._fusion_glimpses (list_v_att, x_q_vec)
+
+        # process document
+
+
+
+

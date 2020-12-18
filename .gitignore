@@ -8,7 +8,8 @@ logs/porting
 logs/vqa_old
 logs/vqa
 logs/vqa2
-
+logs/okvqa
+data/okvqa/extracted_text/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

@@ -20,7 +20,7 @@ python extract.py --dir_data data/coco --dataset coco --data_split val --batch_s
 ```
 # it would automatically download the skip-thoughts model, which is used to
 # extract the feature of the language
-python train.py -e --path_opt options/vqa/mutan_att_trainval.yaml --resume ckpt
+python train.py -e --path_opt options/okvqa/mutan_att_train.yaml --resume ckpt
 ```
 
 ### evaluate OKVQA data on the train/val dataset.

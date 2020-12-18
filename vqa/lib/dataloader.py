@@ -272,3 +272,6 @@ class DataLoader(object):
 
     def __len__(self):
         return int(math.ceil(len(self.sampler) / float(self.batch_size)))
+
+    def get_text_by_id(self, idx):
+        return self.dataset.get_text_by_id(idx)
